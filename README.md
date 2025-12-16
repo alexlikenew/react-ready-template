@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# react-ready-template
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-minded React template bootstrapped with Vite and organized in a scalable, feature-oriented structure. It’s meant to be a clean starting point for real apps: routing, data fetching, state, UI utilities, and testing are wired from day one.
 
-Currently, two official plugins are available:
+## Tech stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Build**: Vite + React + TypeScript
+- **Routing**: React Router (data router: `createBrowserRouter` / `RouterProvider`)
+- **Server state**: TanStack Query + TanStack Query Devtools
+- **Client state**: Zustand (slice pattern)
+- **HTTP**: Axios
+- **Forms**: React Hook Form + Zod (+ `@hookform/resolvers`)
+- **Styling**: Tailwind CSS
+- **UI utilities**: `class-variance-authority` (CVA) + `clsx` + `tailwind-merge` (via `cn()` helper)
+- **Icons**: Lucide
+- **Dates**: date-fns
+- **Unit/component tests**: Vitest + Testing Library + jsdom
+- **E2E tests**: Playwright
 
-## React Compiler
+## Getting started
+- npm install
+- npm run dev
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Project structure
 
-## Expanding the ESLint configuration
+```text
+src/
+├── app/                  # Application initialization
+│   ├── providers/        # Global providers (Query, Router)
+│   ├── routes/           # Route definitions
+│   └── styles/           # Global styles and Tailwind imports
+│
+├── pages/                # Composition layer for routes
+│   ├── home/             # Home page composition
+│   └── files/            # Files page composition
+│
+├── widgets/              # Independent, complex UI blocks
+│   └── app-shell/        # Sidebar, Header, Layout wrappers
+│
+├── features/             # User actions and business logic
+│   └── file-manager/     # Logic for handling files (Upload, Delete)
+│
+├── entities/             # Business domain models (Data + Pure UI)
+│   └── file/             # File type definitions and display components
+│
+└── shared/               # Reusable, domain-agnostic code
+    ├── api/              # API clients and query config
+    ├── config/           # Environment validation (Zod)
+    ├── lib/              # Utilities (cn, date formatting)
+    └── ui/               # Design System (Buttons, Inputs, Dialogs)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### What goes where
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+#### `app/`
+App-level composition and configuration.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `providers/`: wiring for Query + Router (single place to add app-level providers)
+- `routes/`: route definitions and path constants
+- `store/`: global Zustand store composition (slices)
+- `styles/`: global Tailwind entry (`globals.css`)
+
+#### `pages/`
+Route-level screens matched by routes. Pages should primarily compose `widgets/` and `features/`.
+
+#### `widgets/`
+Larger UI blocks shared across pages (layout, navigation, shells). Widgets can compose multiple features.
+
+#### `features/`
+Business features. Each feature typically owns its own:
+- `api/` (Axios calls + TanStack Query hooks/keys)
+- `model/` (feature state, optionally Zustand slice)
+- `ui/` (feature UI components)
+
+#### `entities/`
+Stable domain models (e.g. `User`, `File`) and optionally schemas/types reusable across features.
+
+#### `shared/`
+Reusable building blocks and utilities.
+
+- `api/`: `apiClient` (Axios instance), optional query config
+- `ui/`: reusable components (e.g. `Button` built with CVA)
+- `lib/`: helpers (`cn`, date helpers, etc.)
+- `config/`: environment helpers/validation (optional)
+
+## Styling Guide
+
+I use a combination of **Tailwind CSS** and **CVA** to build reusable components.
+
+- **Utility Classes:** Use standard Tailwind classes for layout and spacing.
+- **Components:** Use `src/shared/ui` components for buttons, inputs, etc.
+- **Conflict Resolution:** Always use the `cn()` utility when merging custom classes with default component styles.
+
+## Conventions
+
+- Prefer keeping state close to the feature. Use `app/store` only for truly global concerns (app-wide UI state, session/auth, etc.).
+- Put API calls and TanStack Query hooks under `features/<feature>/api` to keep server-state logic next to the feature that uses it.
+- Use `shared/lib/cn.ts` to merge Tailwind classes safely (`clsx` + `tailwind-merge`).
